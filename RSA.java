@@ -1,3 +1,4 @@
+import java.io.BufferedWriter;
 import java.math.*;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -6,6 +7,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.SecureRandom;
 import java.io.IOException;
+import java.io.FileInputStream;
 import java.io.FileWriter;
 
 
@@ -36,27 +38,27 @@ public class RSA {
         // System.out.println("y: " + val[2]);
 
         // String text = "Hello world";
-        // String text = "HOW ARE YOU roda>?";
-        // System.out.println("text: " + text);
+        // String text = "HOW ARE YOU roda>?lkjd fs-0q234kjas;ldfj;alksdjf;alskdjf;laksjfl!)(*\n";
+        // // // System.out.println("text: " + text);
+        // // //##TRY TO MAKE READFUKE LINE BY LINE
+        // // // String hex = TexttoHex(text);
+        // // // System.out.println("TESTING TexttoHex: " + hex);
 
-        // String hex = TexttoHex(text);
-        // System.out.println("TESTING TexttoHex: " + hex);
-
-        // BigInteger dec = HextoDec(hex);
+        // BigInteger dec = HextoDec("046b6164736a666c736b6a663b616c7364660a6c6b7364616a66");
         // System.out.println("TESTING HextoDec: " + dec);
 
         // String hex2 = DectoHex(dec);
         // System.out.println("TESTING DectoHex: " + hex2);
 
-        // String text2 = HextoText(hex2);
-        // System.out.println("TESTING HextoDec: " + text2);
+        // // // String text2 = HextoText(hex2);
+        // // // System.out.println("TESTING HextoDec: " + text2);
 
-        //[0],[1],[2] = n, e, d
-        // System.out.println("TEST");
+        // // //[0],[1],[2] = n, e, d
+        // // // System.out.println("TEST");
         // BigInteger keys[] = KeyScheduler();
-        // System.out.println("TEST FOR n GENERATOR:" + keys[0]);
-        // System.out.println("TEST FOR e GENERATOR:" + keys[1]);
-        // System.out.println("TEST FOR d GENERATOR:" + keys[2]);
+        // // // System.out.println("TEST FOR n GENERATOR:" + keys[0]);
+        // // // System.out.println("TEST FOR e GENERATOR:" + keys[1]);
+        // // // System.out.println("TEST FOR d GENERATOR:" + keys[2]);
 
         // String cipherhex = encryption(text, keys);
         // System.out.println("CIPHERHEX: " + cipherhex);
@@ -92,12 +94,19 @@ public class RSA {
 
         BigInteger keys[] = KeyScheduler();
 
-        String text = readfile("RSA-test.txt");
-
-        String cipherhex = encryption(text, keys);
-        // System.out.println("CIPHERHEX: " + cipherhex);
-
-        writefile(decryption(cipherhex, keys), "DECRYPTED.TXT");
+        String [] storefordecrypt = ENCRYPTION("RSA-test.txt", keys);
+        DECRYPTION("ENCRYPTED.txt", keys, storefordecrypt);
+        // String[] cipherhex = encryption(text, keys);
+        // writefile(cipherhex, "ENCRYPTED.txt");
+        //* READ LINE BY LINE AND WRITE INTO FILE LINE BY LINE
+        // String cipherappend="";
+        // for (int i = 0; i< cipherhex.length; i++) {
+        //     cipherappend += cipherhex[i];
+            
+        // }
+        // System.out.println("CIPHERHEX: " + cipherappend);
+        // String plaintext = decryption(cipherhex, keys);
+        // // writefile(plaintext, "DECRYPTED.txt");
         // System.out.println("PLAINTEXT: " + plaintext);
 
     }
@@ -124,30 +133,38 @@ public class RSA {
         //     }
         // }
 
-        String hex = "";
+        
         String temp = "";
+        String hex = "";
+        String hexstring="";
         // StringBuilder hex = new StringBuilder();
         // StringBuilder temp = new StringBuilder();
         int j=0;
-
+        // System.out.println("TEXT: " + text);
+        // String hex = String.format("%02x",text);
+        // System.out.println("HEX: " + hex);
         for(int i =0; i<text.length(); i++){
-            temp = hex;
-            hex += Integer.toHexString(text.charAt(i));
+            temp = hexstring;
+            hex = Integer.toHexString(text.charAt(i));
+            if(hex.length() == 1){
+                hex = "0"+hex;
+            }
+            hexstring += hex;
             // System.out.println("B4TEMP: " + temp);
-            // System.out.println("B4HEX: " + hex);
-            // System.out.println("B4CHECK: " + checkMsmallerN(HextoDec(hex), n));
+            // System.out.println("B4HEX: " + hexstring);
+            // System.out.println("B4CHECK: " + checkMsmallerN(HextoDec(hexstring), n));
             
-            if(!checkMsmallerN(HextoDec(hex), n)){
+            if(!checkMsmallerN(HextoDec(hexstring), n)){
                 partmhex[j] = temp;
                 // System.out.println("TEMP: " + temp);
-                // System.out.println("HEX: " + hex);
+                // System.out.println("HEX: " + hexstring);
                 j++;
                 partmhex = Arrays.copyOf(partmhex, j + 1);
                 i--;
-                hex= "";
+                hexstring="";
             }
             else if(i == text.length()-1){
-                partmhex[j] = hex;
+                partmhex[j] = hexstring;
                 // System.out.println("123TEMP: " + partmhex[j]);
             }
         }
@@ -168,13 +185,14 @@ public class RSA {
     }
 
     public static BigInteger HextoDec(String hex){
+        // System.out.println("HEXTODEC,HEX: " + hex);
         BigInteger dec = new BigInteger(hex, 16);
+        // System.out.println("HEXTODEC,DEC: " + dec);
         return dec;
     }
 
     public static String DectoHex(BigInteger dec){
-        String hexstr = dec.toString(16);
-
+        String hexstr = String.format("%02x", dec);
         return hexstr;
     }
 
@@ -198,10 +216,19 @@ public class RSA {
 
         // return new String(hexbyte);
 
-        StringBuilder output = new StringBuilder("");
-    
+        StringBuilder output = new StringBuilder();
+        String str="";
+        // System.out.println("HEX: " + hex);
+        // System.out.println("LENGTH: " + hex.length());
         for (int i = 0; i < hex.length(); i += 2) {
-            String str = hex.substring(i, i + 2);
+            // System.out.println("hextotext,i:  " + i);
+            if(i != hex.length()-1){
+                str = hex.substring(i, i + 2);
+            }
+            else{//i = last index
+                str = hex.substring(i);
+            }
+            // System.out.println("STR: "+ str);
             output.append((char) Integer.parseInt(str, 16));
         }
         
@@ -214,18 +241,20 @@ public class RSA {
     public static BigInteger[] KeyScheduler() {
         boolean prime_p = false;
         boolean prime_q = false;
-
+        // SecureRandom rnd = new SecureRandom();
         // step 1
-        byte[] bytes = new byte[8 + 1];
-        bytes[0] = 1;
-        BigInteger base = new BigInteger(bytes);// base = 2^64
+        // byte[] bytes = new byte[8 + 1];
+        // bytes[0] = 1;
+        // BigInteger base = new BigInteger(bytes);// base = 2^64
 
-        BigInteger p_add = new BigInteger(5, new Random());
-        BigInteger q_add = new BigInteger(10, new Random());
+        // BigInteger p_add = new BigInteger(5, new Random());
+        // BigInteger q_add = new BigInteger(10, new Random());
 
-        BigInteger p = base.add(p_add);// number larger than 2^64
-        BigInteger q = base.add(q_add);// number larger than 2^64
+        // BigInteger p = base.add(p_add);// number larger than 2^64
+        // BigInteger q = base.add(q_add);// number larger than 2^64
         
+        BigInteger p = BigInteger.probablePrime(65, new Random());
+        BigInteger q = BigInteger.probablePrime(65, new Random());
         // BigInteger p = new BigInteger("7");
         // BigInteger q = new BigInteger("13");
         
@@ -280,6 +309,7 @@ public class RSA {
                 // System.out.println("PHI-N: " + phi_n);
                 // System.out.println("THIS IS E: " + e);
                 checkgcd = ExtendedEuclideanAlgorithm(e, phi_n);
+                // System.out.println("chegcd: "+ checkgcd[0]);
                 // System.out.println("gcd: " + checkgcd[0].equals(1));
                 // System.out.println("x: " + checkgcd[1]);
             }
@@ -375,31 +405,60 @@ public class RSA {
     }
 //-----------------------------------------------------------------------------------------------------------------------------------------
 
+    // public static BigInteger BinaryModularExponentiation(BigInteger base, BigInteger exponent, BigInteger modulus) {
+
+    //     BigInteger result = BigInteger.ONE;
+    //     BigInteger one = BigInteger.ONE;
+    //     BigInteger zero = BigInteger.ZERO;
+
+    //     if (modulus.compareTo(one) == 0) {
+    //         result = zero;
+    //     }
+    //     base = base.mod(modulus);
+
+    //     while (exponent.compareTo(zero) > 0) {
+    //         if (exponent.mod(BigInteger.valueOf(2)).compareTo(one) == 0) {
+    //             result = result.multiply(base).mod(modulus);
+    //         }
+    //         exponent = exponent.shiftRight(1);
+    //         base = base.multiply(base).mod(modulus);
+    //     }
+    //     return result; // returns the result of a^b mod p
+    // }
+
     public static BigInteger BinaryModularExponentiation(BigInteger base, BigInteger exponent, BigInteger modulus) {
+        BigInteger res = BigInteger.ONE; // Initialize result
+        BigInteger one = BigInteger.ONE;
+        BigInteger zero = BigInteger.ZERO;
 
-        BigInteger result = new BigInteger("1");
-        BigInteger one = new BigInteger("1");
-        BigInteger zero = new BigInteger("0");
+        base = base.mod(modulus); // Update x if it is more than or
+        // equal to p
 
-        if (modulus.compareTo(one) == 0) {
-            result = BigInteger.valueOf(0);
+        if (base.equals(zero)){
+            return zero; // In case x is divisible by p;
         }
-        base = base.mod(modulus);
 
-        while (exponent.compareTo(zero) > 0) {
-            if (exponent.mod(BigInteger.valueOf(2)).compareTo(one) == 0) {
-                result = result.multiply(base).mod(modulus);
+        while (exponent.compareTo(zero)>0)
+        {
+            // If y is odd, multiply x with result
+            if (!(exponent.and(one)).equals(zero)){
+                res = res.multiply(base).mod(modulus);
             }
-            exponent = exponent.shiftRight(1);
+            // y must be even now
+            exponent = exponent.shiftRight(1); // y = y/2
             base = base.multiply(base).mod(modulus);
         }
-        return result; // returns the result of a^b mod p
+        return res;   
     }
 
-    public static String encryption(String plaintext, BigInteger keys[]){
+    public static String[] encryption(String plaintext, BigInteger keys[]){
         String plaintexthex[] = TexttoHex(plaintext,keys[0]);
-        String cipherhex="";
+        // String cipherhex="";
+        String cipherhex[]= new String[1];
+        int j=0;
         for(int i=0; i<plaintexthex.length; i++){
+            // System.out.println("ENCRYPTION, plaintexthex["+i+"]" + plaintexthex[i]);
+        //     System.out.println("STARTING HEXTTODEC IN ENCRUPTION");
             BigInteger plaintextdec = HextoDec(plaintexthex[i]);
             // System.out.println("PLAINTEXTDEC ENC: "+ plaintextdec);
             // System.out.println("keys[1], e: "+ keys[1]);
@@ -407,9 +466,11 @@ public class RSA {
     
             BigInteger c = BinaryModularExponentiation(plaintextdec, keys[1], keys[0]);
             // System.out.println("C AFTER BME: " + c);
-            cipherhex += DectoHex(c);
-
-            // System.out.println("plaintexthex["+i+"]: " + plaintexthex[i]);
+            // cipherhex += DectoHex(c);
+            cipherhex[j++] = DectoHex(c);
+            cipherhex = Arrays.copyOf(cipherhex, j + 1);
+        //     // System.out.println("cipherhex: " + cipherhex);
+        //     System.out.println("plaintexthex["+i+"]: " + plaintexthex[i]);
         }
 
 
@@ -418,51 +479,58 @@ public class RSA {
         // System.out.println("exponenent: " + keys[1]);
         // System.out.println("modulus: " + keys[0]);
         // System.out.println("cipherhex: " + cipherhex);
-
         return cipherhex;
     }
 
-    public static String decryption(String cipherhex, BigInteger keys[]){
+    public static String decryption(String[] cipherhex, BigInteger keys[]){
         String hex ="", temp="";
-        String partchex[] = new String[1];
-        int j=0;
-        for(int i =0; i<cipherhex.length(); i++){
-            temp = hex;
-            hex += cipherhex.charAt(i);
-            // System.out.println("B4TEMP: " + temp);
-            // System.out.println("B4HEX: " + hex);
-            // System.out.println("B4CHECK: " + checkMsmallerN(HextoDec(hex), keys[0]));
-            
-            if(!checkMsmallerN(HextoDec(hex), keys[0])){
-                // System.out.println("TEMP: " + temp);
-                // System.out.println("HEX: " + hex);
-                partchex[j] = temp;
-                j++;
-                partchex = Arrays.copyOf(partchex, j + 1);
-                i--;
-                hex= "";
-            }
-            else if(i == cipherhex.length()-1){
-                partchex[j] = hex;
-                // System.out.println("123TEMP: " + partchex[j]);
+        // String partchex[] = new String[1];
+        // int j=0;
+        // for(int i =0; i<cipherhex.length(); i++){
+        //     temp = hex;
+        //     hex += cipherhex.charAt(i);
+        //     // hex = ""+cipherhex.charAt(i)+""+cipherhex.charAt(i+1);
 
-            }
-        }
-        for (int i = 0; i < partchex.length; i++) {
-            // System.out.println("PARTCHEX["+i+"]: " + partchex[i]);
-        }
+        //     // System.out.println("B4TEMP: " + temp);
+        //     // System.out.println("B4HEX: " + hex);
+        //     // System.out.println("B4CHECK: " + checkMsmallerN(HextoDec(hex), keys[0]));
+            
+        //     if(!checkMsmallerN(HextoDec(hex), keys[0])){
+        //         // System.out.println("TEMP: " + temp);
+        //         // System.out.println("HEX: " + hex);
+        //         partchex[j] = temp;
+        //         j++;
+        //         partchex = Arrays.copyOf(partchex, j + 1);
+        //         i--;
+        //         hex= "";
+        //     }
+        //     else if(i == cipherhex.length()-1){
+        //         partchex[j] = hex;
+        //         // System.out.println("123TEMP: " + partchex[j]);
+
+        //     }
+        // }
+        // for (int i = 0; i < partchex.length; i++) {
+        //     System.out.println("PARTCHEX["+i+"]: " + partchex[i]);
+        // }
+
+
         String plaintexthex="";
-        for (int z =0; z<partchex.length; z++){
-            BigInteger plaintextdec = HextoDec(partchex[z]);
+        for (int z =0; z<cipherhex.length-1; z++){
+            BigInteger plaintextdec = HextoDec(cipherhex[z]);
             // System.out.println("plaintextdec:" + plaintextdec);
             // System.out.println("plaintexthex:" + DectoHex(plaintextdec));
-    
-            BigInteger m = BinaryModularExponentiation(plaintextdec, keys[2], keys[0]);
-            plaintexthex += DectoHex(m);
-        }
-        // System.out.println("PLAINTEXTHEX: " + plaintexthex);
-        String plaintext = HextoText(plaintexthex);
 
+            // System.out.println("PLAINTEXTDEC DEC: "+ plaintextdec);
+            // System.out.println("keys[1], e: "+ keys[1]);
+            // System.out.println("keys[0], n: "+ keys[0]);
+            // System.out.println("keys[2], d: "+ keys[2]);
+            BigInteger m = BinaryModularExponentiation(plaintextdec, keys[2], keys[0]);
+            // System.out.println("m: " + m);
+            plaintexthex += DectoHex(m);
+            // System.out.println("PLAINTEXTHEX: " + plaintexthex);
+        }
+        String plaintext = HextoText(plaintexthex);
 
 
         // BigInteger plaintextdec = HextoDec(cipherhex);
@@ -477,24 +545,92 @@ public class RSA {
         return plaintext;
     }
 
-    public static String readfile(String filename){
+    public static String[] ENCRYPTION(String filename, BigInteger keys[]){
         String text = "";
+        String ciphertextwhole="";
+        String[] storefordecrypt = new String[1];
+        int j=0;
+        String txtfilename = "ENCRYPTED.txt";
         try {
-            Path path = Path.of(filename);
-            text = Files.readString(path);
+            // Path path = Path.of(filename);
+            // text = Files.readString(path);
+            FileInputStream f = new FileInputStream(filename);
+            Scanner sc = new Scanner(f);
+            while(sc.hasNextLine()){
+                text = sc.nextLine();
+                // System.out.println("THIS IS ONE LINE ALREADY: " + text);
+                if(text.isEmpty()){
+                    writefile(text, txtfilename);
+                }
+                else{
+                    String[] cipherhex = encryption(text, keys);
+                    for (int i = 0; i < cipherhex.length-1; i++) {
+                        ciphertextwhole += cipherhex[i];
+                        // System.out.println("TESTencruption: " + i+ " : "+ cipherhex[i]);
+                        storefordecrypt[j] = cipherhex[i];
+                        j++;
+                        storefordecrypt = Arrays.copyOf(storefordecrypt, j + 1);
+                    }
+                    writefile(ciphertextwhole, txtfilename);
+                    ciphertextwhole="";
+                }
+            }
 
         } catch (IOException e) {
             System.out.println("Error occured during reading file");
             System.exit(1);
         }
+        return storefordecrypt;
+    }
 
-        return text;
+    public static void DECRYPTION(String filename, BigInteger keys[], String storefordecrypt[]){
+        String text = "";
+        String ciphertextwhole="";
+        String txtfilename = "DECRYPTED.txt";
+        String strperline[] = new String[1];
+        int j =0;
+        try {
+            FileInputStream f = new FileInputStream(filename);
+            Scanner sc = new Scanner(f);
+            while(sc.hasNextLine()){
+                text = sc.nextLine();
+                if(text.isEmpty()){
+                    writefile(text, txtfilename);
+                }
+                else{
+                    //store the paritioned arrays of line read 
+                    for (int i = 0; i < storefordecrypt.length-1; i++) {
+                        System.out.println("ttext: " + text);
+                        System.out.println("DDECRYPTION: ["+i+"] :" + storefordecrypt[i]);
+                        System.out.println("DDECRYPTION STORELENGTH:" + storefordecrypt.length);
+                        if(text.contains(storefordecrypt[i])){
+                            System.out.println("WENT TIN");
+                            strperline[j] = storefordecrypt[i];
+                            j++;
+                            strperline = Arrays.copyOf(strperline, j + 1);
+                            System.out.println("WHAT IS J:" + j);
+                        }
+                    }
+                    String plaintext = decryption(strperline, keys);
+                    // for (int i = 0; i < storefordecypt.length-1; i++) {
+                    //     ciphertextwhole += storefordecypt[i];
+                    // }
+                    writefile(plaintext, txtfilename);
+                }
+                strperline = new String[1];
+                j=0;
+            }
+
+        } catch (IOException e) {
+            System.out.println("Error occured during reading file");
+            System.exit(1);
+        }        
     }
 
     public static void writefile(String letter, String filename) {
         try {
-            FileWriter out = new FileWriter(filename);
-            out.write(letter);
+            BufferedWriter out = new BufferedWriter(new FileWriter(filename, true));//true so that will append to the file
+            out.append(letter+"\n");
             out.close();
         } catch (IOException e) {
             System.out.println("Error occurred in writing to file.");
